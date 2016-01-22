@@ -1,3 +1,15 @@
+"""Routines used by WMT hooks for TopoFlow components."""
+
+choices_map = {
+    'Yes': 1,
+    'No': 0
+}
+units_map = {
+    'meters': 'm^2',
+    'kilometers': 'km^2'
+}
+
+
 def get_dtype(parameter_value):
     """Get the TopoFlow data type of a parameter.
 
