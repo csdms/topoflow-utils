@@ -1,4 +1,6 @@
 """Routines used by WMT hooks for TopoFlow components."""
+import string
+
 
 choices_map = {
     'Yes': 1,
@@ -8,6 +10,18 @@ units_map = {
     'meters': 'm^2',
     'kilometers': 'km^2'
 }
+
+
+def lowercase_choice(choice):
+    """Formats a string for consumption by TopoFlow.
+
+    Parameters
+    ----------
+    choice : str
+      A parameter choice from WMT.
+
+    """
+    return string.join(choice.split(), '_').lower()
 
 
 def get_dtype(parameter_value):
