@@ -1,4 +1,5 @@
 """Routines used by WMT hooks for TopoFlow components."""
+import os
 import string
 import yaml
 
@@ -98,7 +99,7 @@ def load_rti(name):
 
 
 def scalar_to_rtg_file(name, env):
-    """Convert a scalar value to an RiverTools RTG file.
+    """Convert a scalar value to a RiverTools RTG file.
     
     Parameters
     ----------
@@ -118,7 +119,64 @@ def scalar_to_rtg_file(name, env):
         dtype = '>f4'
     else:
         dtype = '<f4'
+    # dtype = '<f4'
     grid = np.full(shape, env[name], dtype=dtype)
     grid.tofile(file_name)
 
     env[name] = env[name + '_file'] = file_name
+
+
+def scalar_to_rts_file(name, env):
+    """Convert a scalar to a grid sequence; write it to an RTS file.
+
+    Parameters
+    ----------
+    name : string
+        Name of the variable to convert to a grid sequence.
+    env : dict
+        Mapping of keys to values for the parameter file environment.
+
+    """
+    env[name + '_ptype'] = 'Grid_Sequence'
+    env[name + '_dtype'] = 'string'
+    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
+
+    rti = load_rti(env['site_prefix'] + '.rti')
+    shape = (rti['Number of rows'], rti['Number of columns'], env['n_steps'])
+    byte_order = rti['Byte order']
+    if byte_order == 'MSB':
+        dtype = '>f4'
+    else:
+        dtype = '<f4'
+    grid = np.full(shape, env[name], dtype=dtype)
+    grid.tofile(file_name)
+
+    env[name] = env[name + '_file'] = file_name
+
+
+def time_series_to_rts_file(name, env):
+    """Convert a time series to a grid sequence; write it to an RTS file.
+
+    Parameters
+    ----------
+    name : string
+        Name of the variable to convert from a time series to a grid sequence.
+    env : dict
+        Mapping of keys to values for the parameter file environment.
+
+    """
+    pass
+
+
+def grid_to_rts_file(name, env):
+    """Convert a grid to a grid sequence; write it to an RTS file.
+
+    Parameters
+    ----------
+    name : string
+        Name of the variable to convert from a grid to a grid sequence.
+    env : dict
+        Mapping of keys to values for the parameter file environment.
+
+    """
+    pass
