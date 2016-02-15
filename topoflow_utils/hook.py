@@ -165,7 +165,24 @@ def time_series_to_rts_file(name, env):
         Mapping of keys to values for the parameter file environment.
 
     """
-    pass
+    env[name + '_ptype'] = 'Grid_Sequence'
+    env[name + '_dtype'] = 'string'
+    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
+    values = np.loadtxt(env[name])
+
+    rti = load_rti(env['site_prefix'] + '.rti')
+    shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
+    byte_order = rti['Byte order']
+    if byte_order == 'MSB':
+        dtype = '>f4'
+    else:
+        dtype = '<f4'
+    stack = np.ndarray(shape, dtype=dtype)
+    for i in xrange(env['n_steps']):
+        stack[i,:,:] = np.full(shape[1:], values[i], dtype=dtype)
+    stack.tofile(file_name)
+
+    env[name] = env[name + '_file'] = file_name
 
 
 def grid_to_rts_file(name, env):
