@@ -196,4 +196,23 @@ def grid_to_rts_file(name, env):
         Mapping of keys to values for the parameter file environment.
 
     """
-    pass
+    env[name + '_ptype'] = 'Grid_Sequence'
+    env[name + '_dtype'] = 'string'
+    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
+
+    rti = load_rti(env['site_prefix'] + '.rti')
+    shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
+    byte_order = rti['Byte order']
+    if byte_order == 'MSB':
+        dtype = '>f4'
+    else:
+        dtype = '<f4'
+
+    stack = np.ndarray(shape, dtype=dtype)
+    grid = np.fromfile(env[name], count=-1, dtype=np.float32)
+
+    for i in xrange(env['n_steps']):
+        stack[i,:,:] = grid.reshape(shape[1:])
+    stack.tofile(file_name)
+
+    env[name] = env[name + '_file'] = file_name
