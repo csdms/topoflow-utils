@@ -142,7 +142,7 @@ def scalar_to_rts_file(name, env):
     file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
 
     rti = load_rti(env['site_prefix'] + '.rti')
-    shape = (rti['Number of rows'], rti['Number of columns'], env['n_steps'])
+    shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
     byte_order = rti['Byte order']
     if byte_order == 'MSB':
         dtype = '>f4'
