@@ -126,21 +126,18 @@ def scalar_to_rtg_file(name, env):
     env[name] = env[name + '_file'] = file_name
 
 
-def scalar_to_rts_file(name, env):
-    """Convert a scalar to a grid sequence; write it to an RTS file.
+def to_rts_file(name, env):
+    """Convert a parameter value to a grid sequence; write it to an RTS file.
 
     Parameters
     ----------
     name : string
-        Name of the variable to convert to a grid sequence.
+        Name of the variable to convert from a scalar, time series, or
+        grid to a grid sequence.
     env : dict
         Mapping of keys to values for the parameter file environment.
 
     """
-    env[name + '_ptype'] = 'Grid_Sequence'
-    env[name + '_dtype'] = 'string'
-    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
-
     rti = load_rti(env['site_prefix'] + '.rti')
     shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
     byte_order = rti['Byte order']
@@ -148,71 +145,25 @@ def scalar_to_rts_file(name, env):
         dtype = '>f4'
     else:
         dtype = '<f4'
-    grid = np.full(shape, env[name], dtype=dtype)
-    grid.tofile(file_name)
 
-    env[name] = env[name + '_file'] = file_name
-
-
-def time_series_to_rts_file(name, env):
-    """Convert a time series to a grid sequence; write it to an RTS file.
-
-    Parameters
-    ----------
-    name : string
-        Name of the variable to convert from a time series to a grid sequence.
-    env : dict
-        Mapping of keys to values for the parameter file environment.
-
-    """
-    env[name + '_ptype'] = 'Grid_Sequence'
-    env[name + '_dtype'] = 'string'
-    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
-    values = np.loadtxt(env[name])
-
-    rti = load_rti(env['site_prefix'] + '.rti')
-    shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
-    byte_order = rti['Byte order']
-    if byte_order == 'MSB':
-        dtype = '>f4'
+    if env[name + '_ptype'] == 'Scalar':
+        stack = np.full(shape, env[name], dtype=dtype)
+    elif env[name + '_ptype'] == 'Time_Series':
+        series = np.loadtxt(env[name])
+        stack = np.ndarray(shape, dtype=dtype)
+        for i in xrange(env['n_steps']):
+            stack[i,:,:] = np.full(shape[1:], series[i], dtype=dtype)
+    elif env[name + '_ptype'] == 'Grid':
+        grid = np.fromfile(env[name], count=-1, dtype=np.float32)
+        stack = np.ndarray(shape, dtype=dtype)
+        for i in xrange(env['n_steps']):
+            stack[i,:,:] = grid.reshape(shape[1:])
     else:
-        dtype = '<f4'
-    stack = np.ndarray(shape, dtype=dtype)
-    for i in xrange(env['n_steps']):
-        stack[i,:,:] = np.full(shape[1:], values[i], dtype=dtype)
+        raise
+
+    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
     stack.tofile(file_name)
 
-    env[name] = env[name + '_file'] = file_name
-
-
-def grid_to_rts_file(name, env):
-    """Convert a grid to a grid sequence; write it to an RTS file.
-
-    Parameters
-    ----------
-    name : string
-        Name of the variable to convert from a grid to a grid sequence.
-    env : dict
-        Mapping of keys to values for the parameter file environment.
-
-    """
     env[name + '_ptype'] = 'Grid_Sequence'
     env[name + '_dtype'] = 'string'
-    file_name = env['case_prefix'] + '_{name}.rts'.format(name=name)
-
-    rti = load_rti(env['site_prefix'] + '.rti')
-    shape = (env['n_steps'], rti['Number of rows'], rti['Number of columns'])
-    byte_order = rti['Byte order']
-    if byte_order == 'MSB':
-        dtype = '>f4'
-    else:
-        dtype = '<f4'
-
-    stack = np.ndarray(shape, dtype=dtype)
-    grid = np.fromfile(env[name], count=-1, dtype=np.float32)
-
-    for i in xrange(env['n_steps']):
-        stack[i,:,:] = grid.reshape(shape[1:])
-    stack.tofile(file_name)
-
     env[name] = env[name + '_file'] = file_name
