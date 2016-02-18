@@ -150,12 +150,12 @@ def to_rts_file(name, env):
         stack = np.full(shape, env[name], dtype=dtype)
     elif env[name + '_ptype'] == 'Time_Series':
         series = np.loadtxt(env[name])
-        stack = np.ndarray(shape, dtype=dtype)
+        stack = np.zeros(shape, dtype=dtype)
         for i in xrange(env['n_steps']):
             stack[i,:,:] = np.full(shape[1:], series[i], dtype=dtype)
     elif env[name + '_ptype'] == 'Grid':
         grid = np.fromfile(env[name], count=-1, dtype=np.float32)
-        stack = np.ndarray(shape, dtype=dtype)
+        stack = np.zeros(shape, dtype=dtype)
         for i in xrange(env['n_steps']):
             stack[i,:,:] = grid.reshape(shape[1:])
     else:
